@@ -1,0 +1,123 @@
+name: Build Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit SHA to build (defaults to the selected workflow ref)
+        required: false
+        default: ""
+      tag:
+        description: Image tag (defaults to the sanitized ref)
+        required: false
+        default: ""
+      platforms:
+        description: Target platforms
+        required: false
+        default: linux/amd64
+        type: choice
+        options:
+          - linux/amd64
+          - linux/arm64
+          - linux/amd64,linux/arm64
+      push:
+        description: Push the image to GitHub Container Registry
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    name: Build Docker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Resolve build parameters
+        id: vars
+        env:
+          INPUT_REF: ${{ inputs.ref }}
+          INPUT_TAG: ${{ inputs.tag }}
+          DEFAULT_REF: ${{ github.ref_name }}
+        run: |
+          ref="${INPUT_REF:-$DEFAULT_REF}"
+          tag="${INPUT_TAG:-$ref}"
+          tag="$(printf '%s' "$tag" | sed 's#[^A-Za-z0-9_.-]#-#g')"
+          image="ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.vars.outputs.ref }}
+
+      - name: Resolve commit
+        id: commit
+        run: echo "sha=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        if: inputs.platforms != 'linux/amd64'
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
+      - name: Login to GitHub Container Registry
+        if: inputs.push
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: ${{ steps.vars.outputs.image }}
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.tag }}
+            type=raw,value=sha-${{ steps.commit.outputs.sha }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          file: Dockerfile
+          platforms: ${{ inputs.platforms }}
+          push: ${{ inputs.push }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+
+      - name: Summary
+        env:
+          REF: ${{ steps.vars.outputs.ref }}
+          COMMIT: ${{ steps.commit.outputs.sha }}
+          PLATFORMS: ${{ inputs.platforms }}
+          PUSHED: ${{ inputs.push }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          {
+            echo "### Image build"
+            echo ""
+            echo "- Ref: \`$REF\`"
+            echo "- Commit: \`$COMMIT\`"
+            echo "- Platforms: \`$PLATFORMS\`"
+            echo "- Pushed: \`$PUSHED\`"
+            echo "- Tags: \`$TAGS\`"
+            if [ -n "$DIGEST" ]; then
+              echo "- Digest: \`$DIGEST\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
