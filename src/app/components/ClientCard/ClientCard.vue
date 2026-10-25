@@ -59,6 +59,7 @@
           <ClientCardEdit :client="client" />
           <ClientCardQRCode :client="client" />
           <ClientCardConfig :client="client" />
+          <ClientCardTurnLink :client="client" />
           <ClientCardOneTimeLinkBtn :client="client" />
         </div>
       </div>

@@ -231,6 +231,7 @@
     },
     "configuration": {
       "oneTimeLink": "Generate short one time link",
+      "copyTurnLink": "Copy VK Turn Proxy link",
       "noPrivateKey": "This client has no known private key. Cannot create Configuration.",
       "showQrCode": "Show QR Code",
       "download": "Download Configuration",

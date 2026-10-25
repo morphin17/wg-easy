@@ -13,6 +13,9 @@ You can set these environment variables to configure the container. They are not
 | `DISABLE_VERSION_CHECK` | `false`   | `true`                      | Disable checks for new wg-easy releases                                  |
 | `TRUSTED_PROXIES`       |           | `172.18.0.2,fd00:1234::/64` | Trusted proxy IPs/CIDRs; a nonempty list also enables CSRF origin checks |
 | `WG_INTERFACE`          | `wg0`     | `wg1`                       | Name of the WireGuard interface                                          |
+| `VK_TURN_LINK`          |           | `https://vk.me/join/AbCd`   | VK group invite link used in `vkturnproxy://` links                      |
+| `VK_TURN_WRAP_KEY`      |           | `00112233...ff`             | 64 hex chars matching free-turn-proxy `-obf-key`                         |
+| `VK_TURN_OBF_PROFILE`   | `rtpopus` | `rtpopus2`                  | Obfuscation profile matching free-turn-proxy `-obf-profile`              |
 
 /// note | IPv6 Caveats
 

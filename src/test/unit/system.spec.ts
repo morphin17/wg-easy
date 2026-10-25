@@ -50,6 +50,7 @@ test('preserves local capabilities when the release check fails and retries on t
     insecure: false,
     isAwg: true,
     firewallEnabled: true,
+    vkTurnProxyEnabled: false,
   });
 
   const recovered = await information();

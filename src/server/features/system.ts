@@ -5,6 +5,7 @@ import { RELEASE, WG_ENV } from '#server/utils/config';
 import { getIpInformation } from '#server/utils/ip';
 import { cachedFetchLatestRelease } from '#server/utils/release';
 import { authorize } from '#server/features/authorization';
+import { isVkTurnProxyEnabled } from '#server/features/vpn/turn';
 import type { Actor } from '#shared/contracts/identity';
 
 export async function information() {
@@ -20,6 +21,7 @@ export async function information() {
     insecure: WG_ENV.INSECURE,
     isAwg: WG_ENV.WG_EXECUTABLE === 'awg',
     firewallEnabled: network.firewallEnabled,
+    vkTurnProxyEnabled: isVkTurnProxyEnabled(),
   };
 }
 
