@@ -9,6 +9,10 @@ import {
   isConfiguredOauthProvider,
   isValidOauthProvider,
 } from '#server/utils/oauth';
+import {
+  VK_TURN_PROXY_OBF_PROFILES,
+  type VkTurnProxyObfProfile,
+} from '#server/utils/vkTurn';
 
 export const RELEASE = 'v' + packageJson.version;
 
@@ -44,6 +48,21 @@ const oauthProviders = process.env.OAUTH_PROVIDERS?.split(',')
   .filter((v) => isValidOauthProvider(v))
   .filter((v) => isConfiguredOauthProvider(OAUTH_PROVIDERS[v]));
 
+const parseVkTurnObfProfile = (
+  value: string | undefined
+): VkTurnProxyObfProfile => {
+  const profile = value?.trim() || 'rtpopus';
+
+  if (!VK_TURN_PROXY_OBF_PROFILES.includes(profile as VkTurnProxyObfProfile)) {
+    throw new Error(
+      `Invalid VK_TURN_OBF_PROFILE: ${profile}. ` +
+        `Expected one of: ${VK_TURN_PROXY_OBF_PROFILES.join(', ')}`
+    );
+  }
+
+  return profile as VkTurnProxyObfProfile;
+};
+
 export const WG_ENV = {
   /** UI is hosted on HTTP instead of HTTPS */
   INSECURE: process.env.INSECURE === 'true',
@@ -70,6 +89,12 @@ export const WG_ENV = {
   DISABLE_PASSWORD_AUTH: process.env.DISABLE_PASSWORD_AUTH === 'true',
   /** Proxies allowed to provide forwarded request information */
   TRUSTED_PROXIES: parseTrustedProxies(process.env.TRUSTED_PROXIES),
+  /** VK group invite link embedded into vkturnproxy:// links */
+  VK_TURN_LINK: process.env.VK_TURN_LINK?.trim() || null,
+  /** 64 hex chars matching the free-turn-proxy server's -obf-key */
+  VK_TURN_WRAP_KEY: process.env.VK_TURN_WRAP_KEY?.trim() || null,
+  /** free-turn-proxy obfuscation profile (-obf-profile) */
+  VK_TURN_OBF_PROFILE: parseVkTurnObfProfile(process.env.VK_TURN_OBF_PROFILE),
 };
 
 if (WG_ENV.OAUTH_PROVIDERS && WG_ENV.OAUTH_PROVIDERS.length > 0) {
