@@ -131,6 +131,24 @@ const parseVkTurnObfProfile = (
   return profile as VkTurnProxyObfProfile;
 };
 
+const parseVkTurnPort = (value: string | undefined): number | null => {
+  const raw = value?.trim();
+
+  if (!raw) {
+    return null;
+  }
+
+  const port = Number(raw);
+
+  if (!/^\d+$/.test(raw) || port < 1 || port > 65535) {
+    throw new Error(
+      `Invalid VK_TURN_PORT: ${raw}. Expected a port between 1 and 65535`
+    );
+  }
+
+  return port;
+};
+
 export const WG_ENV = {
   /** UI is hosted on HTTP instead of HTTPS */
   INSECURE: process.env.INSECURE === 'true',
@@ -163,6 +181,8 @@ export const WG_ENV = {
   VK_TURN_WRAP_KEY: process.env.VK_TURN_WRAP_KEY?.trim() || null,
   /** free-turn-proxy obfuscation profile (-obf-profile) */
   VK_TURN_OBF_PROFILE: parseVkTurnObfProfile(process.env.VK_TURN_OBF_PROFILE),
+  /** Port of the free-turn-proxy server, used as the port in peerAddress */
+  VK_TURN_PORT: parseVkTurnPort(process.env.VK_TURN_PORT),
 };
 
 if (WG_ENV.OAUTH_PROVIDERS && WG_ENV.OAUTH_PROVIDERS.length > 0) {

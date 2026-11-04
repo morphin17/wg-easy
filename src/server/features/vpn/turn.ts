@@ -14,12 +14,13 @@ import { getDatabase } from '#db';
 function vkTurnProxyConfig() {
   const vkLink = WG_ENV.VK_TURN_LINK;
   const wrapKeyHex = WG_ENV.VK_TURN_WRAP_KEY;
+  const port = WG_ENV.VK_TURN_PORT;
 
-  if (!vkLink || !wrapKeyHex) {
+  if (!vkLink || !wrapKeyHex || !port) {
     return null;
   }
 
-  return { vkLink, wrapKeyHex };
+  return { vkLink, wrapKeyHex, port };
 }
 
 /** If the UI should offer vkturnproxy:// links. */
@@ -67,7 +68,7 @@ export function turnLink(actor: Actor, id: number) {
       presharedKey: client.preSharedKey,
       dnsServers: client.dns ?? defaults.defaultDns,
       vkLink: config.vkLink,
-      peerAddress: formatEndpoint(defaults.host, defaults.port),
+      peerAddress: formatEndpoint(defaults.host, config.port),
       wrapKeyHex: config.wrapKeyHex,
       obfProfile: WG_ENV.VK_TURN_OBF_PROFILE,
       clientID: clientId(client.name, client.id),

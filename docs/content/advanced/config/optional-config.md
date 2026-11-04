@@ -16,6 +16,7 @@ You can set these environment variables to configure the container. They are not
 | `VK_TURN_LINK`          |           | `https://vk.me/join/AbCd`   | VK group invite link used in `vkturnproxy://` links                      |
 | `VK_TURN_WRAP_KEY`      |           | `00112233...ff`             | 64 hex chars matching free-turn-proxy `-obf-key`                         |
 | `VK_TURN_OBF_PROFILE`   | `rtpopus` | `rtpopus2`                  | Obfuscation profile matching free-turn-proxy `-obf-profile`              |
+| `VK_TURN_PORT`          |           | `56000`                     | Port of the free-turn-proxy server used in `peerAddress`                 |
 
 /// note | IPv6 Caveats
 
